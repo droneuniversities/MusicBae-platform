@@ -344,6 +344,7 @@ const corsConfig = {
       'http://localhost:3000',
       'http://localhost:5001',
       'http://localhost:8000',
+      'https://musicbae-platform.vercel.app',
       'https://musicbae.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
