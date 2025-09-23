@@ -188,7 +188,7 @@ router.post('/song', auth, songUpload.fields([
   { name: 'coverArt', maxCount: 1 }
 ]), (req, res) => {
   try {
-    const files = req.files;
+    const files = req.files || {};
     const uploadedFiles = {};
 
     // Process preview song

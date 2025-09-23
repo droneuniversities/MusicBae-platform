@@ -370,6 +370,34 @@ app.get('/api/songs/my', auth, async (req, res) => {
   }
 });
 
+// Get artist's songs by ID (for artist dashboard)
+app.get('/api/artists/:id/songs', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+    
+    const songs = await Song.find({ artist: id, isPublic: true })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    const total = await Song.countDocuments({ artist: id, isPublic: true });
+    
+    res.json({
+      songs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Tips routes
 app.get('/api/tips', async (req, res) => {
   try {
@@ -902,6 +930,124 @@ app.post('/api/upload/audio', auth, async (req, res) => {
   } catch (error) {
     console.error('Audio upload error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Song upload endpoint (multiple files)
+app.post('/api/upload/song', auth, async (req, res) => {
+  try {
+    const files = req.body.files || {};
+    const uploadedFiles = {};
+
+    // Process preview song
+    if (files.previewSong) {
+      const userId = req.user._id;
+      const timestamp = Date.now();
+      const filename = `preview_${userId}_${timestamp}.mp3`;
+      
+      let fileBuffer;
+      let contentType = 'audio/mpeg';
+      
+      if (files.previewSong.startsWith('data:')) {
+        const base64Data = files.previewSong.split(',')[1];
+        fileBuffer = Buffer.from(base64Data, 'base64');
+        
+        const contentTypeMatch = files.previewSong.match(/data:([^;]+)/);
+        if (contentTypeMatch) {
+          contentType = contentTypeMatch[1];
+        }
+      } else {
+        fileBuffer = Buffer.from(files.previewSong, 'base64');
+      }
+      
+      const blob = await put(filename, fileBuffer, {
+        access: 'public',
+        contentType: contentType
+      });
+      
+      uploadedFiles.previewSong = {
+        url: blob.url,
+        filename: filename,
+        size: fileBuffer.length,
+        mimetype: contentType
+      };
+    }
+
+    // Process complete song MP3
+    if (files.completeSongMp3) {
+      const userId = req.user._id;
+      const timestamp = Date.now();
+      const filename = `complete_${userId}_${timestamp}.mp3`;
+      
+      let fileBuffer;
+      let contentType = 'audio/mpeg';
+      
+      if (files.completeSongMp3.startsWith('data:')) {
+        const base64Data = files.completeSongMp3.split(',')[1];
+        fileBuffer = Buffer.from(base64Data, 'base64');
+        
+        const contentTypeMatch = files.completeSongMp3.match(/data:([^;]+)/);
+        if (contentTypeMatch) {
+          contentType = contentTypeMatch[1];
+        }
+      } else {
+        fileBuffer = Buffer.from(files.completeSongMp3, 'base64');
+      }
+      
+      const blob = await put(filename, fileBuffer, {
+        access: 'public',
+        contentType: contentType
+      });
+      
+      uploadedFiles.completeSongMp3 = {
+        url: blob.url,
+        filename: filename,
+        size: fileBuffer.length,
+        mimetype: contentType
+      };
+    }
+
+    // Process cover art
+    if (files.coverArt) {
+      const userId = req.user._id;
+      const timestamp = Date.now();
+      const filename = `cover_${userId}_${timestamp}.jpg`;
+      
+      let fileBuffer;
+      let contentType = 'image/jpeg';
+      
+      if (files.coverArt.startsWith('data:')) {
+        const base64Data = files.coverArt.split(',')[1];
+        fileBuffer = Buffer.from(base64Data, 'base64');
+        
+        const contentTypeMatch = files.coverArt.match(/data:([^;]+)/);
+        if (contentTypeMatch) {
+          contentType = contentTypeMatch[1];
+        }
+      } else {
+        fileBuffer = Buffer.from(files.coverArt, 'base64');
+      }
+      
+      const blob = await put(filename, fileBuffer, {
+        access: 'public',
+        contentType: contentType
+      });
+      
+      uploadedFiles.coverArt = {
+        url: blob.url,
+        filename: filename,
+        size: fileBuffer.length,
+        mimetype: contentType
+      };
+    }
+
+    res.json({
+      message: 'Song files uploaded successfully',
+      files: uploadedFiles
+    });
+  } catch (error) {
+    console.error('Song upload error:', error);
+    res.status(500).json({ error: 'Server error during song upload' });
   }
 });
 
