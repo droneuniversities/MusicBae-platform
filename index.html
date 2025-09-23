@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <meta name="description" content="MusicBae - The revolutionary platform where artists share unreleased music and fans support them through tips">
+    <meta name="keywords" content="music, artists, tipping, unreleased music, fan support">
+    <meta name="author" content="MusicBae">
+    <meta property="og:title" content="MusicBae - Connect Artists & Fans">
+    <meta property="og:description" content="Discover unreleased music and support your favorite artists">
+    <meta property="og:type" content="website">
+    <title>MusicBae - Connect Artists & Fans</title>
+    
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Plyr (kept for fallback styles) -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+    <!-- Howler.js for robust, instant audio playback -->
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles/main.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/logo/MusicBae.png">
+    <script>
+      // Prevent FOUC by applying saved theme ASAP
+      try {
+        var t = localStorage.getItem('theme');
+        var root = document.documentElement;
+        if (t === 'light') { root.classList.add('light'); }
+        else { root.classList.add('dark'); }
+      } catch (e) {}
+    </script>
+  </head>
+  <body class="font-inter">
+    <script>
+      window.__ENV__ = { NODE_ENV: 'development' };
+    </script>
+    <div id="root"></div>
+    
+    <!-- API Service (load first) -->
+    <script type="text/babel" src="js/api.js"></script>
+    
+    <!-- Context (load first) -->
+    <script type="text/babel" src="js/context.js"></script>
+    
+    <!-- Utilities -->
+    <script type="text/babel" src="js/utils.js"></script>
+    
+    <!-- Error Boundary -->
+    <script type="text/babel" src="js/ErrorBoundary.js"></script>
+    
+    <!-- Page Components -->
+    <script type="text/babel" src="js/pages/Home.js"></script>
+    <script type="text/babel" src="js/pages/Artists.js"></script>
+    <script type="text/babel" src="js/pages/ErrorLog.js"></script>
+    <script type="text/babel" src="js/pages/FanDashboard.js"></script>
+    <script type="text/babel" src="js/pages/ArtistDashboard.js"></script>
+    <script type="text/babel" src="js/pages/About.js"></script>
+    <script type="text/babel" src="js/pages/Contact.js"></script>
+    <script type="text/babel" src="js/pages/Services.js"></script>
+    
+    <!-- App Scripts -->
+    <script type="text/babel" src="js/components/Auth.js"></script>
+    <script type="text/babel" src="js/components/EditProfile.js"></script>
+    <script type="text/babel" src="js/app.js"></script>
+</body>
+</html> 
