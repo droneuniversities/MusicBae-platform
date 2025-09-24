@@ -4,6 +4,10 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/upload-song.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
