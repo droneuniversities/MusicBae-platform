@@ -370,34 +370,6 @@ app.get('/api/songs/my', auth, async (req, res) => {
   }
 });
 
-// Get artist's songs by ID (for artist dashboard)
-app.get('/api/artists/:id/songs', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
-    const skip = (page - 1) * limit;
-    
-    const songs = await Song.find({ artist: id, isPublic: true })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
-    
-    const total = await Song.countDocuments({ artist: id, isPublic: true });
-    
-    res.json({
-      songs,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Tips routes
 app.get('/api/tips', async (req, res) => {
   try {
@@ -933,112 +905,69 @@ app.post('/api/upload/audio', auth, async (req, res) => {
   }
 });
 
-// Song upload endpoint (multiple files)
+// Song upload endpoint using Vercel Blob (handles multiple files)
 app.post('/api/upload/song', auth, async (req, res) => {
   try {
-    const files = req.body.files || {};
+    const userId = req.user._id;
+    const timestamp = Date.now();
     const uploadedFiles = {};
 
-    // Process preview song
-    if (files.previewSong) {
-      const userId = req.user._id;
-      const timestamp = Date.now();
-      const filename = `preview_${userId}_${timestamp}.mp3`;
+    // Helper function to upload a file
+    const uploadFile = async (fileData, fieldName, defaultContentType) => {
+      if (!fileData) return null;
+
+      const filename = `${fieldName}_${userId}_${timestamp}.${defaultContentType.split('/')[1]}`;
       
       let fileBuffer;
-      let contentType = 'audio/mpeg';
+      let contentType = defaultContentType;
       
-      if (files.previewSong.startsWith('data:')) {
-        const base64Data = files.previewSong.split(',')[1];
+      if (fileData.startsWith('data:')) {
+        // Handle base64 data URL
+        const base64Data = fileData.split(',')[1];
         fileBuffer = Buffer.from(base64Data, 'base64');
         
-        const contentTypeMatch = files.previewSong.match(/data:([^;]+)/);
+        // Extract content type from data URL
+        const contentTypeMatch = fileData.match(/data:([^;]+)/);
         if (contentTypeMatch) {
           contentType = contentTypeMatch[1];
         }
       } else {
-        fileBuffer = Buffer.from(files.previewSong, 'base64');
+        // Handle direct file data
+        fileBuffer = Buffer.from(fileData, 'base64');
       }
       
+      // Upload to Vercel Blob
       const blob = await put(filename, fileBuffer, {
         access: 'public',
         contentType: contentType
       });
       
-      uploadedFiles.previewSong = {
+      return {
         url: blob.url,
         filename: filename,
         size: fileBuffer.length,
         mimetype: contentType
       };
+    };
+
+    // Upload preview song
+    if (req.body.previewSong) {
+      uploadedFiles.previewSong = await uploadFile(req.body.previewSong, 'previewSong', 'audio/mpeg');
     }
 
-    // Process complete song MP3
-    if (files.completeSongMp3) {
-      const userId = req.user._id;
-      const timestamp = Date.now();
-      const filename = `complete_${userId}_${timestamp}.mp3`;
-      
-      let fileBuffer;
-      let contentType = 'audio/mpeg';
-      
-      if (files.completeSongMp3.startsWith('data:')) {
-        const base64Data = files.completeSongMp3.split(',')[1];
-        fileBuffer = Buffer.from(base64Data, 'base64');
-        
-        const contentTypeMatch = files.completeSongMp3.match(/data:([^;]+)/);
-        if (contentTypeMatch) {
-          contentType = contentTypeMatch[1];
-        }
-      } else {
-        fileBuffer = Buffer.from(files.completeSongMp3, 'base64');
-      }
-      
-      const blob = await put(filename, fileBuffer, {
-        access: 'public',
-        contentType: contentType
-      });
-      
-      uploadedFiles.completeSongMp3 = {
-        url: blob.url,
-        filename: filename,
-        size: fileBuffer.length,
-        mimetype: contentType
-      };
+    // Upload complete song MP3
+    if (req.body.completeSongMp3) {
+      uploadedFiles.completeSongMp3 = await uploadFile(req.body.completeSongMp3, 'completeSongMp3', 'audio/mpeg');
     }
 
-    // Process cover art
-    if (files.coverArt) {
-      const userId = req.user._id;
-      const timestamp = Date.now();
-      const filename = `cover_${userId}_${timestamp}.jpg`;
-      
-      let fileBuffer;
-      let contentType = 'image/jpeg';
-      
-      if (files.coverArt.startsWith('data:')) {
-        const base64Data = files.coverArt.split(',')[1];
-        fileBuffer = Buffer.from(base64Data, 'base64');
-        
-        const contentTypeMatch = files.coverArt.match(/data:([^;]+)/);
-        if (contentTypeMatch) {
-          contentType = contentTypeMatch[1];
-        }
-      } else {
-        fileBuffer = Buffer.from(files.coverArt, 'base64');
-      }
-      
-      const blob = await put(filename, fileBuffer, {
-        access: 'public',
-        contentType: contentType
-      });
-      
-      uploadedFiles.coverArt = {
-        url: blob.url,
-        filename: filename,
-        size: fileBuffer.length,
-        mimetype: contentType
-      };
+    // Upload complete song WAV
+    if (req.body.completeSongWav) {
+      uploadedFiles.completeSongWav = await uploadFile(req.body.completeSongWav, 'completeSongWav', 'audio/wav');
+    }
+
+    // Upload cover art
+    if (req.body.coverArt) {
+      uploadedFiles.coverArt = await uploadFile(req.body.coverArt, 'coverArt', 'image/jpeg');
     }
 
     res.json({
@@ -1047,7 +976,7 @@ app.post('/api/upload/song', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Song upload error:', error);
-    res.status(500).json({ error: 'Server error during song upload' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

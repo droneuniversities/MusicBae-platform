@@ -4,29 +4,18 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "."
-      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/api/index.js"
     }
   ],
   "env": {
     "NODE_ENV": "production",
     "MONGODB_URI": "mongodb+srv://musicbae_DB:uQzcwVf8qIMPvACl@musicbaedb.7dycpbq.mongodb.net/musicbae?retryWrites=true&w=majority&appName=MusicBaeDB",
-    "JWT_SECRET": "musicbae-super-secret-jwt-key-production-2024",
-    "FRONTEND_URL": "https://musicbae-platform-psaiqxakw-mars-projects-7934ac38.vercel.app"
+    "JWT_SECRET": "your-super-secret-jwt-key-change-this-in-production",
+    "FRONTEND_URL": "https://musicbae.vercel.app"
   }
 }

@@ -211,15 +211,36 @@ class ApiService {
     console.log('API Service - Upload URL:', url);
     console.log('API Service - Token:', this.token ? 'Present' : 'Missing');
     
-    const config = {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: formData
+    // Convert FormData to base64 format for Vercel Blob
+    const uploadData = {};
+    
+    // Helper function to convert file to base64
+    const fileToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
     };
 
     try {
+      // Convert each file to base64
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          uploadData[key] = await fileToBase64(value);
+        }
+      }
+
+      const config = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(uploadData)
+      };
+
       console.log('API Service - Making request to:', url);
       const response = await fetch(url, config);
       console.log('API Service - Response status:', response.status);
