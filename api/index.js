@@ -987,8 +987,8 @@ app.use('/styles', express.static(path.join(__dirname, '../styles')));
 app.use('/js', express.static(path.join(__dirname, '../js')));
 app.use('/logo', express.static(path.join(__dirname, '../logo')));
 
-// Serve index.html for SPA routes
-app.get('*', (req, res) => {
+// Serve index.html for SPA routes (only for non-API routes)
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
